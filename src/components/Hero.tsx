@@ -104,16 +104,14 @@ export default function Hero() {
       <div className="absolute inset-0 z-0">
         <video
           ref={videoRef}
+          src={slide.video}
           autoPlay
           muted
           loop={false}
           playsInline
           preload="auto"
-          poster="https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=1920&q=85"
           className="hero-video w-full h-full object-cover scale-100 origin-center"
-        >
-          <source src={slide.video} type="video/mp4" />
-        </video>
+        />
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
       </div>
 
