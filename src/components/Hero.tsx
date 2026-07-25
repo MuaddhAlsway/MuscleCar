@@ -20,75 +20,84 @@ const slides = [
 ]
 
 export default function Hero() {
-  const videoRef = useRef<HTMLVideoElement>(null)
-  const [current, setCurrent] = useState(0)
-  const [textRevealed, setTextRevealed] = useState(false)
+  const topVideoRef = useRef<HTMLVideoElement>(null)
+  const bottomVideoRef = useRef<HTMLVideoElement>(null)
+  const [topIndex, setTopIndex] = useState(0)
+  const [bottomIndex, setBottomIndex] = useState(1)
+  const [transitioning, setTransitioning] = useState(false)
 
-  const animateText = useCallback(() => {
-    if (textRevealed) return
-    setTextRevealed(true)
+  const revealText = useCallback(() => {
     gsap.to('.hero-tag', { opacity: 1, y: 0, duration: 0.8, ease: 'power3.out' })
     gsap.fromTo('.hero-title-word', { yPercent: 110 }, {
       yPercent: 0, duration: 1, stagger: 0.12, ease: 'power3.out',
     })
     gsap.to('.hero-sub', { opacity: 1, y: 0, duration: 0.8, delay: 0.5, ease: 'power3.out' })
     gsap.to('.hero-ctas', { opacity: 1, y: 0, duration: 0.8, delay: 0.7, ease: 'power3.out' })
-  }, [textRevealed])
+  }, [])
 
-  const crossfade = useCallback((index: number) => {
-    if (index === current) return
-    const v = videoRef.current
-    if (!v) return
-
-    gsap.to('.hero-video', {
-      opacity: 0,
-      duration: 0.4,
-      ease: 'power2.inOut',
-      onComplete: () => {
-        setCurrent(index)
-        v.src = slides[index].video
-        v.load()
-        v.play().catch(() => {})
-        gsap.to('.hero-video', { opacity: 1, duration: 0.6, ease: 'power2.out' })
-      },
-    })
-
-    // reset text
-    setTextRevealed(false)
+  const hideText = useCallback(() => {
     gsap.set('.hero-tag', { opacity: 0, y: 16 })
     gsap.set('.hero-title-word', { yPercent: 110 })
     gsap.set('.hero-sub', { opacity: 0, y: 16 })
     gsap.set('.hero-ctas', { opacity: 0, y: 16 })
+  }, [])
 
-    // reveal new text after crossfade
-    setTimeout(() => {
-      setTextRevealed(true)
-      gsap.to('.hero-tag', { opacity: 1, y: 0, duration: 0.8, ease: 'power3.out' })
-      gsap.fromTo('.hero-title-word', { yPercent: 110 }, {
-        yPercent: 0, duration: 1, stagger: 0.12, ease: 'power3.out',
-      })
-      gsap.to('.hero-sub', { opacity: 1, y: 0, duration: 0.8, delay: 0.5, ease: 'power3.out' })
-      gsap.to('.hero-ctas', { opacity: 1, y: 0, duration: 0.8, delay: 0.7, ease: 'power3.out' })
-    }, 500)
-  }, [current])
+  const splitTransition = useCallback((targetIndex: number) => {
+    if (transitioning || targetIndex === topIndex) return
+    setTransitioning(true)
+
+    const topHalf = document.querySelector('.hero-split-top') as HTMLElement
+    const bottomHalf = document.querySelector('.hero-split-bottom') as HTMLElement
+    if (!topHalf || !bottomHalf) return
+
+    hideText()
+
+    const tl = gsap.timeline({
+      onComplete: () => {
+        setTopIndex(targetIndex)
+        setBottomIndex(topIndex)
+        setTransitioning(false)
+
+        gsap.set(topHalf, { clipPath: 'inset(0 0 0 0)' })
+        gsap.set(bottomHalf, { clipPath: 'inset(0 0 0 0)' })
+
+        const newTop = document.querySelector('.hero-split-top video') as HTMLVideoElement
+        if (newTop) { newTop.play().catch(() => {}) }
+
+        setTimeout(revealText, 300)
+      },
+    })
+
+    tl.to(topHalf, { clipPath: 'inset(0 50% 0 50%)', duration: 0.9, ease: 'power4.inOut' })
+      .to(bottomHalf, { clipPath: 'inset(0 50% 0 50%)', duration: 0.9, ease: 'power4.inOut' }, '<0.15')
+  }, [transitioning, topIndex, hideText, revealText])
 
   useEffect(() => {
-    const v = videoRef.current
-    if (!v) return
-    v.play().catch(() => {})
+    const topVid = topVideoRef.current
+    if (topVid) topVid.play().catch(() => {})
+  }, [topIndex])
+
+  useEffect(() => {
+    const topVid = topVideoRef.current
+    if (!topVid) return
 
     const handleEnded = () => {
-      const next = (current + 1) % slides.length
-      crossfade(next)
+      const next = (topIndex + 1) % slides.length
+      splitTransition(next)
     }
 
-    v.addEventListener('ended', handleEnded)
-    return () => v.removeEventListener('ended', handleEnded)
-  }, [current, crossfade])
+    topVid.addEventListener('ended', handleEnded)
+    return () => topVid.removeEventListener('ended', handleEnded)
+  }, [topIndex, splitTransition])
+
+  useEffect(() => {
+    hideText()
+    setTimeout(revealText, 2800)
+  }, [])
 
   useEffect(() => {
     const ctx = gsap.context(() => {
-      gsap.to('.hero-video', {
+      gsap.to('.hero-video-layer', {
         scale: 1.15,
         ease: 'none',
         scrollTrigger: { trigger: '.hero', start: 'top top', end: 'bottom top', scrub: 1.5 },
@@ -97,25 +106,39 @@ export default function Hero() {
     return () => ctx.revert()
   }, [])
 
-  const slide = slides[current]
+  const slide = slides[topIndex]
 
   return (
     <section className="hero relative w-full h-screen min-h-[600px] overflow-hidden">
-      <div className="absolute inset-0 z-0">
+      {/* Bottom video (revealed behind) */}
+      <div className="hero-split-bottom absolute inset-0 z-0" style={{ clipPath: 'inset(0 0 0 0)' }}>
         <video
-          ref={videoRef}
-          src={slide.video}
+          ref={bottomVideoRef}
+          src={slides[bottomIndex].video}
+          muted
+          loop={false}
+          playsInline
+          className="hero-video-layer w-full h-full object-cover"
+        />
+      </div>
+
+      {/* Top video (splits from center) */}
+      <div className="hero-split-top absolute inset-0 z-[1]" style={{ clipPath: 'inset(0 0 0 0)' }}>
+        <video
+          ref={topVideoRef}
+          src={slides[topIndex].video}
           autoPlay
           muted
           loop={false}
           playsInline
           preload="auto"
-          className="hero-video w-full h-full object-cover scale-100 origin-center"
+          className="hero-video-layer w-full h-full object-cover"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
       </div>
 
-      <div className="absolute inset-0 z-[1] flex flex-col justify-end pb-16 md:pb-24">
+      <div className="absolute inset-0 z-[2] bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
+
+      <div className="absolute inset-0 z-[3] flex flex-col justify-end pb-16 md:pb-24">
         <div className="w-full max-w-[1600px] mx-auto px-6 md:px-10">
           <div className="hero-tag flex items-center gap-4 mb-8 opacity-0 translate-y-4">
             <span className="w-10 h-px bg-accent" />
@@ -147,19 +170,19 @@ export default function Hero() {
         </div>
       </div>
 
-      {/* Dots only */}
-      <div className="hidden md:flex absolute right-10 top-1/2 -translate-y-1/2 z-[2] flex-col gap-3">
+      {/* Dots */}
+      <div className="hidden md:flex absolute right-10 top-1/2 -translate-y-1/2 z-[4] flex-col gap-3">
         {slides.map((_, i) => (
           <button
             key={i}
-            onClick={() => crossfade(i)}
-            className={`w-2.5 h-2.5 rounded-full transition-all duration-400 ${i === current ? 'bg-accent scale-125' : 'bg-light/30 hover:bg-light/60'}`}
+            onClick={() => splitTransition(i)}
+            className={`w-2.5 h-2.5 rounded-full transition-all duration-400 ${i === topIndex ? 'bg-accent scale-125' : 'bg-light/30 hover:bg-light/60'}`}
             aria-label={`Video ${i + 1}`}
           />
         ))}
       </div>
 
-      <div className="hidden md:flex absolute bottom-8 right-10 z-[2] flex-col items-center gap-3">
+      <div className="hidden md:flex absolute bottom-8 right-10 z-[4] flex-col items-center gap-3">
         <span className="text-[10px] font-medium tracking-[0.15em] uppercase text-light/30 [writing-mode:vertical-rl]">Scroll</span>
         <div className="w-px h-14 bg-gradient-to-b from-accent to-transparent animate-pulse" />
       </div>
