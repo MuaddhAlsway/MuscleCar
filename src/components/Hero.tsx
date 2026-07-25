@@ -48,9 +48,16 @@ export default function Hero() {
 
     const topHalf = document.querySelector('.hero-split-top') as HTMLElement
     const bottomHalf = document.querySelector('.hero-split-bottom') as HTMLElement
+    const bottomVid = bottomVideoRef.current
     if (!topHalf || !bottomHalf) return
 
     hideText()
+
+    // Start playing the bottom video before revealing it
+    if (bottomVid) {
+      bottomVid.currentTime = 0
+      bottomVid.play().catch(() => {})
+    }
 
     const tl = gsap.timeline({
       onComplete: () => {
@@ -118,6 +125,7 @@ export default function Hero() {
           muted
           loop={false}
           playsInline
+          preload="auto"
           className="hero-video-layer w-full h-full object-cover"
         />
       </div>
