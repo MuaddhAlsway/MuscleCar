@@ -55,7 +55,7 @@ export default function OwnershipServices() {
           {services.map((s) => (
             <div
               key={s.number}
-              className="relative bg-surface overflow-hidden group hover:bg-bg transition-colors duration-500"
+              className="relative bg-surface overflow-hidden group hover:bg-bg transition-all duration-500 hover:scale-[1.02] hover:shadow-[0_0_30px_rgba(26,42,58,0.12)] hover:z-10"
               data-reveal
               onMouseEnter={(e) => {
                 const video = e.currentTarget.querySelector('video')

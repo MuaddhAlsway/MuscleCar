@@ -72,7 +72,7 @@ function TestimonialCard({ t }: { t: typeof testimonials[0] }) {
 
   return (
     <div
-      className="flex-shrink-0 w-[380px] md:w-[440px] relative mx-3 overflow-hidden"
+      className="flex-shrink-0 w-[380px] md:w-[440px] relative mx-3 overflow-hidden rounded-sm transition-all duration-500 hover:shadow-[0_0_30px_rgba(179,207,229,0.2)] hover:scale-[1.02]"
       style={{ height: '280px' }}
       onMouseEnter={handleEnter}
       onMouseLeave={handleLeave}
@@ -128,7 +128,7 @@ export default function Testimonials() {
   }, [])
 
   return (
-    <section className="bg-bg py-24 md:py-36 overflow-hidden">
+    <section id="testimonials" className="bg-bg py-24 md:py-36 overflow-hidden">
       <div className="max-w-[1600px] mx-auto px-6 md:px-10 mb-16 md:mb-24">
         <span className="text-xs font-medium tracking-[0.2em] uppercase text-accent mb-4 block" data-reveal>Testimonials</span>
         <h2 className="font-heading text-heading-1 font-semibold text-primary" data-reveal>

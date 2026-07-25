@@ -63,3 +63,13 @@
     transform: translateY(110%);
   }
 }
+
+.popup-timer {
+  width: 100%;
+  animation: popup-shrink 10s linear forwards;
+}
+
+@keyframes popup-shrink {
+  from { width: 100%; }
+  to { width: 0%; }
+}

@@ -14,6 +14,7 @@ import Testimonials from './components/Testimonials'
 import Gallery from './components/Gallery'
 import FinalCTA from './components/FinalCTA'
 import Footer from './components/Footer'
+import SectionPopup from './components/SectionPopup'
 import CarDetail from './pages/CarDetail'
 
 gsap.registerPlugin(ScrollTrigger)
@@ -53,6 +54,16 @@ function HomePage() {
     <>
       <Preloader />
       <Navbar />
+      <SectionPopup
+        triggerId="ownership"
+        title="Experience Full Ownership"
+        subtitle="Every Meridian owner receives 24/7 concierge support, five-year maintenance coverage, and access to our private invitation-only events. Hover any card to explore."
+      />
+      <SectionPopup
+        triggerId="testimonials"
+        title="Hear From Our Owners"
+        subtitle="Real stories from collectors, editors, and drivers who chose Meridian. Hover a card to reveal their experience in motion."
+      />
       <main>
         <Hero />
         <FeaturedVehicles />
