@@ -81,12 +81,20 @@ export default function Hero() {
 
   useEffect(() => {
     const topVid = topVideoRef.current
-    if (topVid) topVid.play().catch(() => {})
-  }, [topIndex])
-
-  useEffect(() => {
-    const topVid = topVideoRef.current
     if (!topVid) return
+
+    const tryPlay = () => {
+      topVid.play().catch(() => {
+        const forcePlay = () => {
+          topVid.play().catch(() => {})
+          document.removeEventListener('touchstart', forcePlay)
+          document.removeEventListener('click', forcePlay)
+        }
+        document.addEventListener('touchstart', forcePlay, { once: true })
+        document.addEventListener('click', forcePlay, { once: true })
+      })
+    }
+    tryPlay()
 
     const handleEnded = () => {
       const next = (topIndex + 1) % slides.length
