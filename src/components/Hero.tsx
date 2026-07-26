@@ -22,9 +22,11 @@ const slides = [
 export default function Hero() {
   const topVideoRef = useRef<HTMLVideoElement>(null)
   const bottomVideoRef = useRef<HTMLVideoElement>(null)
+  const coverRef = useRef<HTMLDivElement>(null)
   const [topIndex, setTopIndex] = useState(0)
   const [bottomIndex, setBottomIndex] = useState(1)
   const [transitioning, setTransitioning] = useState(false)
+  const coverHidden = useRef(false)
 
   const revealText = useCallback(() => {
     gsap.to('.hero-tag', { opacity: 1, y: 0, duration: 0.8, ease: 'power3.out' })
@@ -79,14 +81,22 @@ export default function Hero() {
       .to(bottomHalf, { clipPath: 'inset(0 50% 0 50%)', duration: 0.9, ease: 'power4.inOut' }, '<0.15')
   }, [transitioning, topIndex, hideText, revealText])
 
+  const hideCover = useCallback(() => {
+    if (coverHidden.current || !coverRef.current) return
+    coverHidden.current = true
+    gsap.to(coverRef.current, { opacity: 0, duration: 0.8, ease: 'power2.inOut' })
+  }, [])
+
   useEffect(() => {
     const topVid = topVideoRef.current
     if (!topVid) return
 
     const tryPlay = () => {
-      topVid.play().catch(() => {
+      topVid.play().then(() => {
+        hideCover()
+      }).catch(() => {
         const forcePlay = () => {
-          topVid.play().catch(() => {})
+          topVid.play().then(() => hideCover()).catch(() => {})
           document.removeEventListener('touchstart', forcePlay)
         }
         document.addEventListener('touchstart', forcePlay, { once: true })
@@ -109,7 +119,7 @@ export default function Hero() {
       topVid.removeEventListener('ended', handleEnded)
       topVid.removeEventListener('canplaythrough', tryPlay)
     }
-  }, [topIndex, splitTransition])
+  }, [topIndex, splitTransition, hideCover])
 
   useEffect(() => {
     hideText()
@@ -158,9 +168,22 @@ export default function Hero() {
         />
       </div>
 
-      <div className="absolute inset-0 z-[2] bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
+      {/* Cover image — hides once video plays */}
+      <div
+        ref={coverRef}
+        className="absolute inset-0 z-[2] bg-dark"
+      >
+        <img
+          src="/chargerboost.jpg"
+          alt=""
+          className="w-full h-full object-cover"
+        />
+        <div className="absolute inset-0 bg-black/30" />
+      </div>
 
-      <div className="absolute inset-0 z-[3] flex flex-col justify-end pb-16 md:pb-24">
+      <div className="absolute inset-0 z-[3] bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
+
+      <div className="absolute inset-0 z-[4] flex flex-col justify-end pb-16 md:pb-24">
         <div className="w-full max-w-[1600px] mx-auto px-6 md:px-10">
           <div className="hero-tag flex items-center gap-4 mb-8 opacity-0 translate-y-4">
             <span className="w-10 h-px bg-accent" />
@@ -193,7 +216,7 @@ export default function Hero() {
       </div>
 
       {/* Dots */}
-      <div className="hidden md:flex absolute right-10 top-1/2 -translate-y-1/2 z-[4] flex-col gap-3">
+      <div className="hidden md:flex absolute right-10 top-1/2 -translate-y-1/2 z-[5] flex-col gap-3">
         {slides.map((_, i) => (
           <button
             key={i}
@@ -204,7 +227,7 @@ export default function Hero() {
         ))}
       </div>
 
-      <div className="hidden md:flex absolute bottom-8 right-10 z-[4] flex-col items-center gap-3">
+      <div className="hidden md:flex absolute bottom-8 right-10 z-[5] flex-col items-center gap-3">
         <span className="text-[10px] font-medium tracking-[0.15em] uppercase text-light/30 [writing-mode:vertical-rl]">Scroll</span>
         <div className="w-px h-14 bg-gradient-to-b from-accent to-transparent animate-pulse" />
       </div>
