@@ -5,6 +5,7 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger'
 const slides = [
   {
     video: '/videos/hero.mp4',
+    image: '/chargerboost.jpg',
     tag: 'Est. 2024',
     title: ['Experience', 'Automotive', 'Excellence'],
     sub: 'Crafted for drivers who demand performance, luxury, and innovation.',
@@ -12,12 +13,28 @@ const slides = [
   },
   {
     video: '/videos/hero2.mp4',
+    image: '/bmw.jpg',
     tag: 'Now Available',
     title: ['Redefine', 'Your', 'Journey'],
     sub: 'Where cutting-edge technology meets timeless design. The future of driving starts here.',
     cta: { label: 'Book Test Drive', href: '#contact' },
   },
 ]
+
+const MOBILE_BREAKPOINT = 768
+
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(
+    typeof window !== 'undefined' ? window.innerWidth < MOBILE_BREAKPOINT : false
+  )
+  useEffect(() => {
+    const mq = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT - 1}px)`)
+    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches)
+    mq.addEventListener('change', handler)
+    return () => mq.removeEventListener('change', handler)
+  }, [])
+  return isMobile
+}
 
 export default function Hero() {
   const topVideoRef = useRef<HTMLVideoElement>(null)
@@ -27,6 +44,7 @@ export default function Hero() {
   const [bottomIndex, setBottomIndex] = useState(1)
   const [transitioning, setTransitioning] = useState(false)
   const coverHidden = useRef(false)
+  const isMobile = useIsMobile()
 
   const revealText = useCallback(() => {
     gsap.to('.hero-tag', { opacity: 1, y: 0, duration: 0.8, ease: 'power3.out' })
@@ -44,6 +62,12 @@ export default function Hero() {
     gsap.set('.hero-ctas', { opacity: 0, y: 16 })
   }, [])
 
+  const hideCover = useCallback(() => {
+    if (coverHidden.current || !coverRef.current) return
+    coverHidden.current = true
+    gsap.to(coverRef.current, { opacity: 0, duration: 0.8, ease: 'power2.inOut' })
+  }, [])
+
   const splitTransition = useCallback((targetIndex: number) => {
     if (transitioning || targetIndex === topIndex) return
     setTransitioning(true)
@@ -55,7 +79,6 @@ export default function Hero() {
 
     hideText()
 
-    // Start playing the bottom video before revealing it
     if (bottomVid) {
       bottomVid.currentTime = 0
       bottomVid.play().catch(() => {})
@@ -81,13 +104,9 @@ export default function Hero() {
       .to(bottomHalf, { clipPath: 'inset(0 50% 0 50%)', duration: 0.9, ease: 'power4.inOut' }, '<0.15')
   }, [transitioning, topIndex, hideText, revealText])
 
-  const hideCover = useCallback(() => {
-    if (coverHidden.current || !coverRef.current) return
-    coverHidden.current = true
-    gsap.to(coverRef.current, { opacity: 0, duration: 0.8, ease: 'power2.inOut' })
-  }, [])
-
   useEffect(() => {
+    if (isMobile) return
+
     const topVid = topVideoRef.current
     if (!topVid) return
 
@@ -119,7 +138,7 @@ export default function Hero() {
       topVid.removeEventListener('ended', handleEnded)
       topVid.removeEventListener('canplaythrough', tryPlay)
     }
-  }, [topIndex, splitTransition, hideCover])
+  }, [topIndex, splitTransition, hideCover, isMobile])
 
   useEffect(() => {
     hideText()
@@ -128,7 +147,7 @@ export default function Hero() {
 
   useEffect(() => {
     const ctx = gsap.context(() => {
-      gsap.to('.hero-video-layer', {
+      gsap.to('.hero-video-layer, .hero-cover-img', {
         scale: 1.15,
         ease: 'none',
         scrollTrigger: { trigger: '.hero', start: 'top top', end: 'bottom top', scrub: 1.5 },
@@ -141,43 +160,55 @@ export default function Hero() {
 
   return (
     <section className="hero relative w-full h-screen min-h-[600px] overflow-hidden">
-      {/* Bottom video (revealed behind) */}
-      <div className="hero-split-bottom absolute inset-0 z-0" style={{ clipPath: 'inset(0 0 0 0)' }}>
-        <video
-          ref={bottomVideoRef}
-          src={slides[bottomIndex].video}
-          muted
-          loop={false}
-          playsInline
-          preload="auto"
-          className="hero-video-layer w-full h-full object-cover"
-        />
-      </div>
+      {/* Bottom video (revealed behind) — desktop only */}
+      {!isMobile && (
+        <div className="hero-split-bottom absolute inset-0 z-0" style={{ clipPath: 'inset(0 0 0 0)' }}>
+          <video
+            ref={bottomVideoRef}
+            src={slides[bottomIndex].video}
+            muted
+            loop={false}
+            playsInline
+            preload="auto"
+            className="hero-video-layer w-full h-full object-cover"
+          />
+        </div>
+      )}
 
-      {/* Top video (splits from center) */}
-      <div className="hero-split-top absolute inset-0 z-[1]" style={{ clipPath: 'inset(0 0 0 0)' }}>
-        <video
-          ref={topVideoRef}
-          src={slides[topIndex].video}
-          autoPlay
-          muted
-          loop={false}
-          playsInline
-          preload="auto"
-          className="hero-video-layer w-full h-full object-cover"
-        />
-      </div>
+      {/* Top video (splits from center) — desktop only */}
+      {!isMobile && (
+        <div className="hero-split-top absolute inset-0 z-[1]" style={{ clipPath: 'inset(0 0 0 0)' }}>
+          <video
+            ref={topVideoRef}
+            src={slides[topIndex].video}
+            autoPlay
+            muted
+            loop={false}
+            playsInline
+            preload="auto"
+            className="hero-video-layer w-full h-full object-cover"
+          />
+        </div>
+      )}
 
-      {/* Cover image — hides once video plays */}
+      {/* Cover image — always on mobile, hides once video plays on desktop */}
       <div
         ref={coverRef}
-        className="absolute inset-0 z-[2] bg-dark"
+        className={`absolute inset-0 z-[2] bg-dark ${isMobile ? '' : ''}`}
       >
-        <img
-          src="/chargerboost.jpg"
-          alt=""
-          className="w-full h-full object-cover"
-        />
+        {isMobile ? (
+          <img
+            src={slide.image}
+            alt=""
+            className="hero-cover-img w-full h-full object-cover"
+          />
+        ) : (
+          <img
+            src={slides[0].image}
+            alt=""
+            className="hero-cover-img w-full h-full object-cover"
+          />
+        )}
         <div className="absolute inset-0 bg-black/30" />
       </div>
 
