@@ -88,13 +88,16 @@ export default function Hero() {
         const forcePlay = () => {
           topVid.play().catch(() => {})
           document.removeEventListener('touchstart', forcePlay)
-          document.removeEventListener('click', forcePlay)
         }
         document.addEventListener('touchstart', forcePlay, { once: true })
-        document.addEventListener('click', forcePlay, { once: true })
       })
     }
-    tryPlay()
+
+    if (topVid.readyState >= 3) {
+      tryPlay()
+    } else {
+      topVid.addEventListener('canplaythrough', tryPlay, { once: true })
+    }
 
     const handleEnded = () => {
       const next = (topIndex + 1) % slides.length
@@ -102,7 +105,10 @@ export default function Hero() {
     }
 
     topVid.addEventListener('ended', handleEnded)
-    return () => topVid.removeEventListener('ended', handleEnded)
+    return () => {
+      topVid.removeEventListener('ended', handleEnded)
+      topVid.removeEventListener('canplaythrough', tryPlay)
+    }
   }, [topIndex, splitTransition])
 
   useEffect(() => {

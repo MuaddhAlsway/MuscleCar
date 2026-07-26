@@ -21,7 +21,7 @@ export default function Preloader() {
           document.querySelector('.pre-percent-num')!.textContent = String(p).padStart(3, '0')
         },
       }, 0.3)
-      .to('.pre-text', { opacity: 0, y: -20, duration: 0.4, ease: 'power2.in' }, '+=0.3')
+      .to('.pre-text', { opacity: 0, y: -20, duration: 0.3, ease: 'power2.in' }, '+=0.15')
       .to('.pre-bar', { opacity: 0, duration: 0.3 }, '-=0.2')
       .to('.pre-percent', { opacity: 0, duration: 0.3 }, '-=0.2')
       .to(ref.current, {
