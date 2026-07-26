@@ -4,20 +4,20 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger'
 
 const slides = [
   {
-    video: '/videos/hero.mp4',
-    image: '/chargerboost.jpg',
-    tag: 'Est. 2024',
-    title: ['Experience', 'Automotive', 'Excellence'],
-    sub: 'Crafted for drivers who demand performance, luxury, and innovation.',
-    cta: { label: 'Explore Collection', href: '#vehicles' },
-  },
-  {
     video: '/videos/hero2.mp4',
-    image: '/bmw.jpg',
+    image: '/chargerboost.jpg',
     tag: 'Now Available',
     title: ['Redefine', 'Your', 'Journey'],
     sub: 'Where cutting-edge technology meets timeless design. The future of driving starts here.',
     cta: { label: 'Book Test Drive', href: '#contact' },
+  },
+  {
+    video: '/videos/hero2.mp4',
+    image: '/bmw.jpg',
+    tag: 'Est. 2024',
+    title: ['Experience', 'Automotive', 'Excellence'],
+    sub: 'Crafted for drivers who demand performance, luxury, and innovation.',
+    cta: { label: 'Explore Collection', href: '#vehicles' },
   },
 ]
 
